@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대전장대중학교 업무 안내</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .modal-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        .calendar-day {
+            min-height: 80px;
+            transition: all 0.3s ease;
+        }
+        .calendar-day:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .week-day {
+            min-height: 120px;
+        }
+        .memo-item {
+            transition: transform 0.2s ease;
+        }
+        .memo-item:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- 헤더 -->
+        <div class="glass-effect rounded-2xl p-6 mb-6 shadow-lg">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <!-- 학교 로고 SVG -->
+                    <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center shadow-lg">
+                        <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-3xl font-bold text-green-800">대전장대중학교 월간/주간 업무 계획</h1>
+                </div>
+                <div class="flex gap-2">
+                    <button id="monthViewBtn" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">월간 보기</button>
+                    <button id="weekViewBtn" class="px-6 py-2 bg-white text-green-600 rounded-lg hover:bg-green-50 transition-colors font-medium border border-green-600">주간 보기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 제출임박 & 퀵메모존 -->
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <!-- 제출임박 -->
+            <div class="glass-effect rounded-2xl p-6 shadow-lg">
+                <h2 class="text-xl font-bold text-green-800 mb-4 flex items-center">
+                    <span class="mr-2">⚠️</span>제출임박
+                </h2>
+                <div id="urgentTasks" class="space-y-3">
+                    <!-- 캘린더에서 제출 임박 알람이 설정된 일정들이 여기에 표시됩니다 -->
+                </div>
+            </div>
+
+            <!-- 퀵메모존 -->
+            <div class="glass-effect rounded-2xl p-6 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-green-800 flex items-center">
+                        <span class="mr-2">📝</span>퀵 메모존
+                    </h2>
+                    <button id="addMemoBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">메모 추가</button>
+                </div>
+                <div id="memoList" class="space-y-2 max-h-40 overflow-y-auto">
+                    <!-- 메모 항목들이 여기에 추가됩니다 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 월별/주별 일정 -->
+        <div class="glass-effect rounded-2xl p-6 mb-6 shadow-lg">
+            <div id="calendarHeader" class="flex justify-between items-center mb-6">
+                <button id="prevBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">◀ 이전</button>
+                <h2 id="calendarTitle" class="text-2xl font-bold text-green-800">2025년 1월</h2>
+                <button id="nextBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">다음 ▶</button>
+            </div>
+            
+            <!-- 월간 달력 -->
+            <div id="monthView" class="calendar-view">
+                <div class="grid grid-cols-7 gap-1 mb-2">
+                    <div class="text-center font-bold text-red-600 p-2">일</div>
+                    <div class="text-center font-bold text-green-800 p-2">월</div>
+                    <div class="text-center font-bold text-green-800 p-2">화</div>
+                    <div class="text-center font-bold text-green-800 p-2">수</div>
+                    <div class="text-center font-bold text-green-800 p-2">목</div>
+                    <div class="text-center font-bold text-green-800 p-2">금</div>
+                    <div class="text-center font-bold text-blue-600 p-2">토</div>
+                </div>
+                <div id="monthCalendar" class="grid grid-cols-7 gap-1">
+                    <!-- 달력 날짜들이 여기에 생성됩니다 -->
+                </div>
+            </div>
+
+            <!-- 주간 달력 -->
+            <div id="weekView" class="calendar-view hidden">
+                <div class="grid grid-cols-7 gap-2">
+                    <div class="text-center font-bold text-red-600 p-2">일</div>
+                    <div class="text-center font-bold text-green-800 p-2">월</div>
+                    <div class="text-center font-bold text-green-800 p-2">화</div>
+                    <div class="text-center font-bold text-green-800 p-2">수</div>
+                    <div class="text-center font-bold text-green-800 p-2">목</div>
+                    <div class="text-center font-bold text-green-800 p-2">금</div>
+                    <div class="text-center font-bold text-blue-600 p-2">토</div>
+                </div>
+                <div id="weekCalendar" class="grid grid-cols-7 gap-2 mt-2">
+                    <!-- 주간 달력이 여기에 생성됩니다 -->
+                </div>
+            </div>
+
+            <button id="addEventBtn" class="mt-6 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium w-full">일정 추가</button>
+        </div>
+
+        <!-- 자료 집계 -->
+        <div class="glass-effect rounded-2xl p-6 shadow-lg">
+            <h2 class="text-xl font-bold text-green-800 mb-4 flex items-center">
+                <span class="mr-2">📊</span>자료 집계
+            </h2>
+            <div id="uploadArea" class="border-2 border-dashed border-green-400 rounded-lg text-center mb-4">
+                <input type="file" id="imageUpload" accept="image/*" class="hidden">
+                <div id="uploadButton" class="p-8">
+                    <button onclick="document.getElementById('imageUpload').click()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                        📷 이미지 업로드
+                    </button>
+                    <p class="text-green-700 mt-2">화면 캡쳐 이미지를 업로드하세요</p>
+                </div>
+                <div id="uploadedImages" class="p-4 hidden w-full">
+                    <!-- 업로드된 이미지가 여기에 표시됩니다 -->
+                </div>
+                <div class="text-right text-green-700 text-sm mt-4 px-4 pb-4">
+                    최종 수정: <span id="lastModified">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- 일정 추가 모달 -->
+    <div id="eventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="modal-glass rounded-2xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 class="text-xl font-bold text-green-800 mb-4">일정 추가</h3>
+            <form id="eventForm">
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">부서</label>
+                    <select id="eventDepartment" class="w-full p-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        <option value="">부서를 선택하세요</option>
+                        <option value="교무운영부">교무운영부</option>
+                        <option value="교육연구부">교육연구부</option>
+                        <option value="생활안전부">생활안전부</option>
+                        <option value="교육정보탐구부">교육정보탐구부</option>
+                        <option value="체육보건부">체육보건부</option>
+                        <option value="진로진학상담부">진로진학상담부</option>
+                        <option value="지역사회환경부">지역사회환경부</option>
+                        <option value="학력신장방과후학교부">학력신장방과후학교부</option>
+                        <option value="1학년부">1학년부</option>
+                        <option value="2학년부">2학년부</option>
+                        <option value="3학년부">3학년부</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">제목</label>
+                    <input type="text" id="eventTitle" class="w-full p-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">설명</label>
+                    <textarea id="eventDescription" class="w-full p-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 h-20"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">시간</label>
+                    <input type="time" id="eventTime" class="w-full p-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">장소</label>
+                    <input type="text" id="eventLocation" class="w-full p-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">유형</label>
+                    <select id="eventType" class="w-full p-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="회의">회의</option>
+                        <option value="제출">제출</option>
+                        <option value="학사일정">학사일정</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">첨부파일</label>
+                    <div id="fileInputs">
+                        <input type="file" class="w-full p-2 border border-green-300 rounded-lg mb-2">
+                    </div>
+                    <button type="button" id="addFileBtn" class="text-green-600 hover:text-green-800 text-sm">+ 파일 추가</button>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="urgentAlert" class="mr-2">
+                        <span class="text-green-800">제출 임박 알람 표시</span>
+                    </label>
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">추가</button>
+                    <button type="button" id="cancelEventBtn" class="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 메모 추가 모달 -->
+    <div id="memoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="modal-glass rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h3 class="text-xl font-bold text-green-800 mb-4">메모 추가</h3>
+            <form id="memoForm">
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">부서</label>
+                    <select id="memoDepartment" class="w-full p-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                        <option value="">부서를 선택하세요</option>
+                        <option value="교무운영부">교무운영부</option>
+                        <option value="교육연구부">교육연구부</option>
+                        <option value="생활안전부">생활안전부</option>
+                        <option value="교육정보탐구부">교육정보탐구부</option>
+                        <option value="체육보건부">체육보건부</option>
+                        <option value="진로진학상담부">진로진학상담부</option>
+                        <option value="지역사회환경부">지역사회환경부</option>
+                        <option value="학력신장방과후학교부">학력신장방과후학교부</option>
+                        <option value="1학년부">1학년부</option>
+                        <option value="2학년부">2학년부</option>
+                        <option value="3학년부">3학년부</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">메모 내용</label>
+                    <textarea id="memoContent" class="w-full p-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 h-24" required></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">삭제 비밀번호 (4자리 숫자)</label>
+                    <input type="password" id="memoPassword" class="w-full p-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" pattern="[0-9]{4}" maxlength="4" required>
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">추가</button>
+                    <button type="button" id="cancelMemoBtn" class="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 메모 상세 모달 -->
+    <div id="memoDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="modal-glass rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h3 class="text-xl font-bold text-green-800 mb-4">메모 상세</h3>
+            <div id="memoDetailContent" class="mb-4 p-3 bg-white bg-opacity-50 rounded-lg min-h-[100px]"></div>
+            <div class="flex gap-3">
+                <button id="deleteMemoBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">삭제</button>
+                <button id="closeMemoDetailBtn" class="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 일정 상세 모달 -->
+    <div id="eventDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="modal-glass rounded-2xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 class="text-xl font-bold text-green-800 mb-4">일정 상세</h3>
+            <div id="eventDetailContent" class="mb-4 space-y-3">
+                <!-- 일정 상세 내용이 여기에 표시됩니다 -->
+            </div>
+            <div class="flex gap-3">
+                <button id="editEventBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">편집</button>
+                <button id="deleteEventBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">삭제</button>
+                <button id="closeEventDetailBtn" class="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 비밀번호 확인 모달 -->
+    <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="modal-glass rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 class="text-xl font-bold text-green-800 mb-4">비밀번호 확인</h3>
+            <form id="passwordForm">
+                <div class="mb-4">
+                    <label class="block text-green-800 font-medium mb-2">삭제 비밀번호 입력</label>
+                    <input type="password" id="deletePassword" class="w-full p-3 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" pattern="[0-9]{4}" maxlength="4" required>
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">삭제</button>
+                    <button type="button" id="cancelPasswordBtn" class="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let currentDate = new Date();
+        let currentView = 'month';
+        let selectedDate = null;
+        let events = {};
+        let memos = [];
+        let currentMemoIndex = null;
+        let currentEventId = null;
+        let isEditingEvent = false;
+
+        // 공휴일 데이터 (2025년 기준 - 대체공휴일 포함)
+        const holidays = {
+            '2025': {
+                '0-1': '신정',
+                '0-27': '설날 연휴',
+                '0-28': '설날',
+                '0-29': '설날 연휴',
+                '2-1': '삼일절',
+                '2-3': '삼일절 대체공휴일',
+                '4-5': '어린이날',
+                '4-6': '부처님오신날',
+                '5-6': '현충일',
+                '7-15': '광복절',
+                '9-5': '추석 연휴',
+                '9-6': '추석',
+                '9-7': '추석 연휴',
+                '9-8': '추석 대체공휴일',
+                '9-3': '개천절',
+                '9-9': '한글날',
+                '11-25': '성탄절'
+            }
+        };
+
+        // 공휴일 확인 함수
+        function checkHoliday(date) {
+            const year = date.getFullYear().toString();
+            const month = date.getMonth();
+            const day = date.getDate();
+            const key = `${month}-${day}`;
+            
+            return holidays[year] && holidays[year][key];
+        }
+
+
+
+        // 데이터 저장/불러오기 함수
+        function saveData() {
+            const uploadedImages = document.getElementById('uploadedImages');
+            const imageElement = uploadedImages.querySelector('img');
+            const uploadedImageData = imageElement ? imageElement.src : null;
+            
+            const data = {
+                events: events,
+                memos: memos,
+                uploadedImage: uploadedImageData,
+                lastModified: new Date().toISOString()
+            };
+            localStorage.setItem('schoolScheduleData', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem('schoolScheduleData');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    events = data.events || {};
+                    memos = data.memos || [];
+                    
+                    // 메모 목록 업데이트
+                    updateMemoList();
+                    
+                    // 업로드된 이미지 복원
+                    if (data.uploadedImage) {
+                        const uploadedImages = document.getElementById('uploadedImages');
+                        const uploadButton = document.getElementById('uploadButton');
+                        
+                        uploadButton.classList.add('hidden');
+                        uploadedImages.classList.remove('hidden');
+                        
+                        const imageDiv = document.createElement('div');
+                        imageDiv.className = 'relative group cursor-pointer w-full';
+                        imageDiv.innerHTML = `
+                            <img src="${data.uploadedImage}" class="w-full h-auto rounded-lg shadow-md">
+                            <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                                <button onclick="editImage(this)" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm">수정</button>
+                                <button onclick="deleteImage(this)" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm">삭제</button>
+                            </div>
+                        `;
+                        uploadedImages.appendChild(imageDiv);
+                    }
+                    
+                    // 마지막 수정 시간 표시
+                    if (data.lastModified) {
+                        const lastModified = new Date(data.lastModified);
+                        document.getElementById('lastModified').textContent = lastModified.toLocaleString('ko-KR');
+                    }
+                } catch (error) {
+                    console.error('데이터 불러오기 실패:', error);
+                }
+            }
+        }
+
+
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData(); // 저장된 데이터 불러오기
+            updateCalendar();
+            updateUrgentTasks();
+            
+            // 이벤트 리스너 설정
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // 뷰 전환 버튼
+            document.getElementById('monthViewBtn').addEventListener('click', () => switchView('month'));
+            document.getElementById('weekViewBtn').addEventListener('click', () => switchView('week'));
+            
+            // 달력 네비게이션
+            document.getElementById('prevBtn').addEventListener('click', () => navigateCalendar(-1));
+            document.getElementById('nextBtn').addEventListener('click', () => navigateCalendar(1));
+            
+            // 일정 추가
+            document.getElementById('addEventBtn').addEventListener('click', openEventModal);
+            document.getElementById('eventForm').addEventListener('submit', addEvent);
+            document.getElementById('cancelEventBtn').addEventListener('click', closeEventModal);
+            
+            // 파일 추가
+            document.getElementById('addFileBtn').addEventListener('click', addFileInput);
+            
+            // 메모 관련
+            document.getElementById('addMemoBtn').addEventListener('click', openMemoModal);
+            document.getElementById('memoForm').addEventListener('submit', addMemo);
+            document.getElementById('cancelMemoBtn').addEventListener('click', closeMemoModal);
+            document.getElementById('closeMemoDetailBtn').addEventListener('click', closeMemoDetailModal);
+            document.getElementById('deleteMemoBtn').addEventListener('click', openPasswordModal);
+            document.getElementById('passwordForm').addEventListener('submit', deleteMemo);
+            document.getElementById('cancelPasswordBtn').addEventListener('click', closePasswordModal);
+            
+            // 일정 상세 관련
+            document.getElementById('closeEventDetailBtn').addEventListener('click', closeEventDetailModal);
+            document.getElementById('editEventBtn').addEventListener('click', editEvent);
+            document.getElementById('deleteEventBtn').addEventListener('click', deleteEvent);
+            
+            // 이미지 업로드
+            document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
+        }
+
+
+
+        function switchView(view) {
+            currentView = view;
+            const monthBtn = document.getElementById('monthViewBtn');
+            const weekBtn = document.getElementById('weekViewBtn');
+            const monthView = document.getElementById('monthView');
+            const weekView = document.getElementById('weekView');
+            
+            if (view === 'month') {
+                monthBtn.className = 'px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium';
+                weekBtn.className = 'px-6 py-2 bg-white text-green-600 rounded-lg hover:bg-green-50 transition-colors font-medium border border-green-600';
+                monthView.classList.remove('hidden');
+                weekView.classList.add('hidden');
+            } else {
+                weekBtn.className = 'px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium';
+                monthBtn.className = 'px-6 py-2 bg-white text-green-600 rounded-lg hover:bg-green-50 transition-colors font-medium border border-green-600';
+                weekView.classList.remove('hidden');
+                monthView.classList.add('hidden');
+            }
+            
+            updateCalendar();
+        }
+
+        function navigateCalendar(direction) {
+            if (currentView === 'month') {
+                currentDate.setMonth(currentDate.getMonth() + direction);
+            } else {
+                currentDate.setDate(currentDate.getDate() + (direction * 7));
+            }
+            updateCalendar();
+        }
+
+        function updateCalendar() {
+            if (currentView === 'month') {
+                updateMonthCalendar();
+            } else {
+                updateWeekCalendar();
+            }
+        }
+
+        function updateMonthCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('calendarTitle').textContent = `${year}년 ${month + 1}월`;
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            const calendar = document.getElementById('monthCalendar');
+            calendar.innerHTML = '';
+            
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day border border-green-200 rounded-lg p-2 cursor-pointer';
+                
+                // 요일별 색상 적용
+                const dayOfWeek = date.getDay();
+                const isHoliday = checkHoliday(date);
+                
+                if (date.getMonth() !== month) {
+                    dayElement.classList.add('text-gray-400');
+                } else if (isHoliday || dayOfWeek === 0) { // 공휴일 또는 일요일
+                    dayElement.classList.add('text-red-600');
+                } else if (dayOfWeek === 6) { // 토요일
+                    dayElement.classList.add('text-blue-600');
+                }
+                
+                const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+                const dayEvents = events[dateKey] || [];
+                
+                dayElement.innerHTML = `
+                    <div class="font-medium">${date.getDate()}</div>
+                    <div class="text-xs space-y-1 mt-1">
+                        ${dayEvents.map(event => `
+                            <div class="bg-green-200 text-green-800 px-1 py-0.5 rounded text-xs truncate cursor-pointer hover:bg-green-300" onclick="event.stopPropagation(); openEventDetail('${dateKey}', ${event.id})">
+                                ${event.title}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                dayElement.addEventListener('click', () => {
+                    selectedDate = dateKey;
+                    openEventModal();
+                });
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        function updateWeekCalendar() {
+            const startOfWeek = new Date(currentDate);
+            startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+            
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            
+            // 주간 제목 생성 - 월이 겹치는 경우와 연도가 바뀌는 경우 처리
+            let weekTitle;
+            if (startOfWeek.getFullYear() === endOfWeek.getFullYear() && startOfWeek.getMonth() === endOfWeek.getMonth()) {
+                // 같은 연도, 같은 월인 경우
+                const weekNumber = Math.ceil((currentDate.getDate() + new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay()) / 7);
+                weekTitle = `${startOfWeek.getFullYear()}년 ${startOfWeek.getMonth() + 1}월 ${weekNumber}주`;
+            } else if (startOfWeek.getFullYear() === endOfWeek.getFullYear()) {
+                // 같은 연도, 다른 월인 경우
+                const startWeekNumber = Math.ceil((startOfWeek.getDate() + new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), 1).getDay()) / 7);
+                const endWeekNumber = Math.ceil((endOfWeek.getDate() + new Date(endOfWeek.getFullYear(), endOfWeek.getMonth(), 1).getDay()) / 7);
+                weekTitle = `${startOfWeek.getFullYear()}년 ${startOfWeek.getMonth() + 1}월 ${startWeekNumber}주~${endOfWeek.getMonth() + 1}월 ${endWeekNumber}주`;
+            } else {
+                // 연도가 바뀌는 경우
+                const startWeekNumber = Math.ceil((startOfWeek.getDate() + new Date(startOfWeek.getFullYear(), startOfWeek.getMonth(), 1).getDay()) / 7);
+                const endWeekNumber = Math.ceil((endOfWeek.getDate() + new Date(endOfWeek.getFullYear(), endOfWeek.getMonth(), 1).getDay()) / 7);
+                weekTitle = `${startOfWeek.getFullYear()}년 ${startOfWeek.getMonth() + 1}월 ${startWeekNumber}주~${endOfWeek.getFullYear()}년 ${endOfWeek.getMonth() + 1}월 ${endWeekNumber}주`;
+            }
+            
+            document.getElementById('calendarTitle').textContent = weekTitle;
+            
+            const calendar = document.getElementById('weekCalendar');
+            calendar.innerHTML = '';
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                
+                const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+                const dayEvents = events[dateKey] || [];
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'week-day border border-green-200 rounded-lg p-3 cursor-pointer';
+                
+                // 요일별 색상 적용
+                const dayOfWeek = date.getDay();
+                const isHoliday = checkHoliday(date);
+                let dateColorClass = 'text-green-800';
+                
+                if (isHoliday || dayOfWeek === 0) { // 공휴일 또는 일요일
+                    dateColorClass = 'text-red-600';
+                } else if (dayOfWeek === 6) { // 토요일
+                    dateColorClass = 'text-blue-600';
+                }
+                
+                dayElement.innerHTML = `
+                    <div class="font-bold ${dateColorClass} mb-2">${date.getDate()}일</div>
+                    <div class="space-y-2">
+                        ${dayEvents.map(event => `
+                            <div class="bg-green-100 border-l-4 border-green-500 p-2 rounded cursor-pointer hover:bg-green-200" onclick="event.stopPropagation(); openEventDetail('${dateKey}', ${event.id})">
+                                <div class="font-medium text-green-800">${event.title}</div>
+                                <div class="text-xs text-green-600">${event.time || ''} ${event.location || ''}</div>
+                                <div class="text-xs text-green-500">${event.type}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                dayElement.addEventListener('click', () => {
+                    selectedDate = dateKey;
+                    openEventModal();
+                });
+                
+                calendar.appendChild(dayElement);
+            }
+            
+            // 제출 임박 업데이트
+            updateUrgentTasks();
+        }
+
+        function openEventModal() {
+            const modalTitle = document.querySelector('#eventModal h3');
+            modalTitle.textContent = isEditingEvent ? '일정 편집' : '일정 추가';
+            document.getElementById('eventModal').classList.remove('hidden');
+            document.getElementById('eventModal').classList.add('flex');
+        }
+
+        function closeEventModal() {
+            document.getElementById('eventModal').classList.add('hidden');
+            document.getElementById('eventModal').classList.remove('flex');
+            document.getElementById('eventForm').reset();
+            selectedDate = null;
+            isEditingEvent = false;
+            currentEventId = null;
+        }
+
+        function addEvent(e) {
+            e.preventDefault();
+            
+            const department = document.getElementById('eventDepartment').value;
+            const title = document.getElementById('eventTitle').value;
+            const description = document.getElementById('eventDescription').value;
+            const time = document.getElementById('eventTime').value;
+            const location = document.getElementById('eventLocation').value;
+            const type = document.getElementById('eventType').value;
+            const urgentAlert = document.getElementById('urgentAlert').checked;
+            
+            const eventDate = selectedDate || `${currentDate.getFullYear()}-${currentDate.getMonth()}-${currentDate.getDate()}`;
+            
+            if (isEditingEvent && currentEventId) {
+                // 편집 모드
+                Object.keys(events).forEach(dateKey => {
+                    const eventIndex = events[dateKey].findIndex(event => event.id === currentEventId);
+                    if (eventIndex !== -1) {
+                        events[dateKey][eventIndex] = {
+                            title: `[${department}] ${title}`,
+                            description,
+                            time,
+                            location,
+                            type,
+                            urgentAlert,
+                            department,
+                            id: currentEventId
+                        };
+                    }
+                });
+            } else {
+                // 새 일정 추가
+                if (!events[eventDate]) {
+                    events[eventDate] = [];
+                }
+                
+                const newEvent = {
+                    title: `[${department}] ${title}`,
+                    description,
+                    time,
+                    location,
+                    type,
+                    urgentAlert,
+                    department,
+                    id: Date.now()
+                };
+                
+                events[eventDate].push(newEvent);
+            }
+            
+            updateCalendar();
+            closeEventModal();
+            updateLastModified();
+            updateUrgentTasks();
+            saveData(); // 데이터 저장
+        }
+
+        function addFileInput() {
+            const fileInputs = document.getElementById('fileInputs');
+            const newInput = document.createElement('input');
+            newInput.type = 'file';
+            newInput.className = 'w-full p-2 border border-green-300 rounded-lg mb-2';
+            fileInputs.appendChild(newInput);
+        }
+
+        function openMemoModal() {
+            document.getElementById('memoModal').classList.remove('hidden');
+            document.getElementById('memoModal').classList.add('flex');
+        }
+
+        function closeMemoModal() {
+            document.getElementById('memoModal').classList.add('hidden');
+            document.getElementById('memoModal').classList.remove('flex');
+            document.getElementById('memoForm').reset();
+        }
+
+        function addMemo(e) {
+            e.preventDefault();
+            
+            const department = document.getElementById('memoDepartment').value;
+            const content = document.getElementById('memoContent').value;
+            const password = document.getElementById('memoPassword').value;
+            
+            const newMemo = {
+                content: `[${department}] ${content}`,
+                password,
+                department,
+                id: Date.now(),
+                date: new Date().toLocaleString('ko-KR')
+            };
+            
+            memos.push(newMemo);
+            updateMemoList();
+            closeMemoModal();
+            updateLastModified();
+            saveData(); // 데이터 저장
+        }
+
+        function updateMemoList() {
+            const memoList = document.getElementById('memoList');
+            memoList.innerHTML = memos.map((memo, index) => `
+                <div class="memo-item bg-white bg-opacity-50 p-3 rounded-lg cursor-pointer hover:bg-opacity-70" onclick="openMemoDetail(${index})">
+                    <div class="font-medium text-green-800 truncate">${memo.content.substring(0, 30)}${memo.content.length > 30 ? '...' : ''}</div>
+                    <div class="text-xs text-green-600">${memo.date}</div>
+                </div>
+            `).join('');
+        }
+
+        function openMemoDetail(index) {
+            currentMemoIndex = index;
+            const memo = memos[index];
+            document.getElementById('memoDetailContent').innerHTML = `
+                <div class="whitespace-pre-wrap">${memo.content}</div>
+                <div class="text-xs text-green-600 mt-2">작성일: ${memo.date}</div>
+            `;
+            document.getElementById('memoDetailModal').classList.remove('hidden');
+            document.getElementById('memoDetailModal').classList.add('flex');
+        }
+
+        function closeMemoDetailModal() {
+            document.getElementById('memoDetailModal').classList.add('hidden');
+            document.getElementById('memoDetailModal').classList.remove('flex');
+            currentMemoIndex = null;
+        }
+
+        function openPasswordModal() {
+            document.getElementById('passwordModal').classList.remove('hidden');
+            document.getElementById('passwordModal').classList.add('flex');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.add('hidden');
+            document.getElementById('passwordModal').classList.remove('flex');
+            document.getElementById('passwordForm').reset();
+        }
+
+        function deleteMemo(e) {
+            e.preventDefault();
+            
+            const inputPassword = document.getElementById('deletePassword').value;
+            const memo = memos[currentMemoIndex];
+            
+            if (inputPassword === memo.password) {
+                memos.splice(currentMemoIndex, 1);
+                updateMemoList();
+                closeMemoDetailModal();
+                closePasswordModal();
+                updateLastModified();
+                saveData(); // 데이터 저장
+            } else {
+                alert('비밀번호가 일치하지 않습니다.');
+            }
+        }
+
+        function updateUrgentTasks() {
+            const urgentTasks = document.getElementById('urgentTasks');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정하여 날짜만 비교
+            const urgentList = [];
+            
+            // 모든 이벤트에서 제출 임박 알람이 설정된 항목 찾기
+            Object.keys(events).forEach(dateKey => {
+                const [year, month, day] = dateKey.split('-').map(Number);
+                const eventDate = new Date(year, month, day);
+                eventDate.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
+                const daysDiff = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+                
+                events[dateKey].forEach(event => {
+                    if (event.urgentAlert && daysDiff <= 3 && daysDiff >= 0) {
+                        urgentList.push({
+                            ...event,
+                            daysLeft: daysDiff,
+                            dateKey: dateKey
+                        });
+                    }
+                });
+            });
+            
+            // 날짜순으로 정렬 (가장 임박한 순서대로)
+            urgentList.sort((a, b) => a.daysLeft - b.daysLeft);
+            
+            if (urgentList.length === 0) {
+                urgentTasks.innerHTML = '<div class="text-green-600 text-center py-4">현재 제출 임박 항목이 없습니다.</div>';
+            } else {
+                urgentTasks.innerHTML = urgentList.map(task => {
+                    let urgencyClass = 'bg-yellow-100 border-yellow-500';
+                    let textClass = 'text-yellow-800';
+                    let dateTextClass = 'text-yellow-600';
+                    
+                    if (task.daysLeft === 0) {
+                        urgencyClass = 'bg-red-100 border-red-500';
+                        textClass = 'text-red-800';
+                        dateTextClass = 'text-red-600';
+                    } else if (task.daysLeft === 1) {
+                        urgencyClass = 'bg-orange-100 border-orange-500';
+                        textClass = 'text-orange-800';
+                        dateTextClass = 'text-orange-600';
+                    }
+                    
+                    return `
+                        <div class="${urgencyClass} border-l-4 p-3 rounded cursor-pointer hover:bg-opacity-80" onclick="openEventDetail('${task.dateKey}', ${task.id})">
+                            <p class="${textClass} font-medium">${task.title}</p>
+                            <p class="${dateTextClass} text-sm">마감: ${task.daysLeft === 0 ? '오늘' : task.daysLeft + '일 후'}</p>
+                            ${task.time ? `<p class="${dateTextClass} text-xs">시간: ${task.time}</p>` : ''}
+                            ${task.location ? `<p class="${dateTextClass} text-xs">장소: ${task.location}</p>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            const uploadedImages = document.getElementById('uploadedImages');
+            const uploadButton = document.getElementById('uploadButton');
+            
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // 기존 이미지가 있다면 제거
+                    uploadedImages.innerHTML = '';
+                    
+                    // 버튼 숨기고 이미지 영역 표시
+                    uploadButton.classList.add('hidden');
+                    uploadedImages.classList.remove('hidden');
+                    
+                    const imageDiv = document.createElement('div');
+                    imageDiv.className = 'relative group cursor-pointer w-full';
+                    imageDiv.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-auto rounded-lg shadow-md">
+                        <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                            <button onclick="editImage(this)" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm">수정</button>
+                            <button onclick="deleteImage(this)" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm">삭제</button>
+                        </div>
+                    `;
+                    uploadedImages.appendChild(imageDiv);
+                    updateLastModified();
+                    saveData(); // 데이터 저장
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // 파일 입력 초기화
+            e.target.value = '';
+        }
+        
+        function editImage(button) {
+            // 새 이미지 선택을 위한 파일 입력 생성
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imageDiv = button.closest('.group');
+                        const img = imageDiv.querySelector('img');
+                        img.src = e.target.result;
+                        updateLastModified();
+                        saveData(); // 데이터 저장
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            fileInput.click();
+        }
+        
+        function deleteImage(button) {
+            const uploadedImages = document.getElementById('uploadedImages');
+            const uploadButton = document.getElementById('uploadButton');
+            
+            // 이미지 제거
+            uploadedImages.innerHTML = '';
+            uploadedImages.classList.add('hidden');
+            uploadButton.classList.remove('hidden');
+            updateLastModified();
+            saveData(); // 데이터 저장
+        }
+
+        function openEventDetail(dateKey, eventId) {
+            const event = events[dateKey].find(e => e.id === eventId);
+            if (!event) return;
+            
+            currentEventId = eventId;
+            selectedDate = dateKey;
+            
+            document.getElementById('eventDetailContent').innerHTML = `
+                <div class="bg-white bg-opacity-50 p-3 rounded-lg">
+                    <div class="font-bold text-green-800 text-lg mb-2">${event.title}</div>
+                    ${event.description ? `<div class="text-green-700 mb-2"><strong>설명:</strong> ${event.description}</div>` : ''}
+                    ${event.time ? `<div class="text-green-700 mb-2"><strong>시간:</strong> ${event.time}</div>` : ''}
+                    ${event.location ? `<div class="text-green-700 mb-2"><strong>장소:</strong> ${event.location}</div>` : ''}
+                    <div class="text-green-700 mb-2"><strong>유형:</strong> ${event.type}</div>
+                    <div class="text-green-700 mb-2"><strong>부서:</strong> ${event.department}</div>
+                    ${event.urgentAlert ? '<div class="text-red-600 text-sm">⚠️ 제출 임박 알람 설정됨</div>' : ''}
+                </div>
+            `;
+            
+            document.getElementById('eventDetailModal').classList.remove('hidden');
+            document.getElementById('eventDetailModal').classList.add('flex');
+        }
+        
+        function closeEventDetailModal() {
+            document.getElementById('eventDetailModal').classList.add('hidden');
+            document.getElementById('eventDetailModal').classList.remove('flex');
+            currentEventId = null;
+            selectedDate = null;
+        }
+        
+        function editEvent() {
+            if (!currentEventId || !selectedDate) return;
+            
+            const event = events[selectedDate].find(e => e.id === currentEventId);
+            if (!event) return;
+            
+            // 편집 모드 설정
+            isEditingEvent = true;
+            
+            // 폼에 기존 데이터 채우기
+            document.getElementById('eventDepartment').value = event.department;
+            document.getElementById('eventTitle').value = event.title.replace(`[${event.department}] `, '');
+            document.getElementById('eventDescription').value = event.description || '';
+            document.getElementById('eventTime').value = event.time || '';
+            document.getElementById('eventLocation').value = event.location || '';
+            document.getElementById('eventType').value = event.type;
+            document.getElementById('urgentAlert').checked = event.urgentAlert;
+            
+            // 상세 모달 닫고 편집 모달 열기
+            closeEventDetailModal();
+            openEventModal();
+        }
+        
+        function deleteEvent() {
+            if (!currentEventId || !selectedDate) {
+                console.error('삭제 오류: currentEventId 또는 selectedDate가 없습니다.', { currentEventId, selectedDate });
+                alert('삭제할 일정을 찾을 수 없습니다.');
+                return;
+            }
+            
+            if (confirm('이 일정을 삭제하시겠습니까?')) {
+                console.log('삭제 시작:', { currentEventId, selectedDate, events: Object.keys(events) });
+                
+                // 해당 날짜의 일정 배열에서 해당 ID를 가진 일정 찾기
+                if (events[selectedDate]) {
+                    const eventIndex = events[selectedDate].findIndex(e => e.id === currentEventId);
+                    console.log('찾은 이벤트 인덱스:', eventIndex);
+                    
+                    if (eventIndex !== -1) {
+                        // 일정 삭제
+                        const deletedEvent = events[selectedDate].splice(eventIndex, 1)[0];
+                        console.log('삭제된 일정:', deletedEvent);
+                        
+                        // 해당 날짜에 일정이 없으면 배열 자체를 삭제
+                        if (events[selectedDate].length === 0) {
+                            delete events[selectedDate];
+                            console.log('빈 날짜 배열 삭제');
+                        }
+                        
+                        // UI 업데이트
+                        updateCalendar();
+                        updateUrgentTasks();
+                        updateLastModified();
+                        saveData();
+                        
+                        // 모달 닫기
+                        closeEventDetailModal();
+                        
+                        alert('일정이 삭제되었습니다.');
+                    } else {
+                        console.error('일정을 찾을 수 없음');
+                        alert('일정을 찾을 수 없습니다.');
+                    }
+                } else {
+                    console.error('해당 날짜에 일정이 없음');
+                    alert('해당 날짜에 일정이 없습니다.');
+                }
+            }
+        }
+
+        function updateLastModified() {
+            const now = new Date();
+            document.getElementById('lastModified').textContent = now.toLocaleString('ko-KR');
+        }
+    </script>
+</body>
+</html>
