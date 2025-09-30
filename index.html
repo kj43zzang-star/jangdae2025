@@ -26,6 +26,32 @@
   </style>
 
   <script>
+
+    // 안전한 UUID
+function safeUUID(){
+  return (crypto.randomUUID?.() || ('f_' + Date.now().toString(36)));
+}
+
+// 파일명을 ASCII로 정리해서 스토리지 키 생성
+function toSafeKey(file){
+  const orig = file.name;
+  const dot  = orig.lastIndexOf('.');
+  const base = (dot > -1 ? orig.slice(0, dot) : orig) || 'file';
+  const ext  = (dot > -1 ? orig.slice(dot + 1) : 'bin').toLowerCase();
+
+  // 비ASCII 제거 + 안전하지 않은 문자 하이픈으로 교체
+  const asciiBase = base
+    .normalize('NFKD')
+    .replace(/[^\x00-\x7F]/g, '')      // 비ASCII 제거
+    .replace(/[^a-z0-9._-]+/gi, '-')   // 안전하지 않은 문자 → -
+    .replace(/-+/g, '-')               // 중복 - 정리
+    .replace(/^-|-$/g, '')             // 앞뒤 - 제거
+    .toLowerCase() || 'file';
+
+  // 정책이 'public' 폴더를 요구해도 동작하도록 public/ 접두어 사용
+  return `public/${safeUUID()}-${asciiBase}.${ext}`;
+}
+    
     /* --- Supabase 초기화 --- */
     const SUPABASE_URL = "https://crwpivblcgvnhmtphlhm.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyd3BpdmJsY2d2bmhtdHBobGhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxODIxNjQsImV4cCI6MjA3NDc1ODE2NH0.7O8-w4NFKBlo0h9uESWt5sCGd-XWoRnsf_Pu3cpkcZc";
@@ -316,12 +342,25 @@
       if(delErr)throw delErr;
     }
     async function uploadImageToStorage(file){
-      const fileName=`${crypto.randomUUID()}_${file.name}`;
-      const {data,error}=await supabase.storage.from('uploads').upload(fileName,file,{upsert:false});
-      if(error)throw error;
-      const {data:{publicUrl}}=supabase.storage.from('uploads').getPublicUrl(data.path);
-      return {path:data.path,url:publicUrl};
-    }
+  // 안전한 키 생성 (ASCII, public/ 폴더 하위)
+  const key = toSafeKey(file);
+
+  const { data, error } = await supabase
+    .storage
+    .from('uploads')
+    .upload(key, file, { upsert: false });
+
+  if (error) {
+    console.error('[upload error]', error);
+    throw error;
+  }
+
+  const { data: { publicUrl } } =
+    supabase.storage.from('uploads').getPublicUrl(data.path);
+
+  return { path: data.path, url: publicUrl };
+}
+
 
     /* ===== 초기화 ===== */
     document.addEventListener('DOMContentLoaded', async ()=>{
