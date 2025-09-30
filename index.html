@@ -36,6 +36,28 @@
       const buf=await crypto.subtle.digest('SHA-256',enc);
       return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
     }
+
+    /* --- 업로드 키 안전화 유틸 --- */
+    function safeUUID(){
+      return (crypto.randomUUID?.() || ('f_' + Date.now().toString(36)));
+    }
+    function toSafeKey(file){
+      const orig = file.name;
+      const dot  = orig.lastIndexOf('.');
+      const base = (dot > -1 ? orig.slice(0, dot) : orig) || 'file';
+      const ext  = (dot > -1 ? orig.slice(dot + 1) : 'bin').toLowerCase();
+
+      const asciiBase = base
+        .normalize('NFKD')
+        .replace(/[^\x00-\x7F]/g, '')      // 비ASCII 제거
+        .replace(/[^a-z0-9._-]+/gi, '-')   // 안전하지 않은 문자 → -
+        .replace(/-+/g, '-')               // 중복 - 정리
+        .replace(/^-|-$/g, '')             // 앞뒤 - 제거
+        .toLowerCase() || 'file';
+
+      // policy가 public 폴더 기준이어도 동작하도록 public/ 접두어 사용
+      return `public/${safeUUID()}-${asciiBase}.${ext}`;
+    }
   </script>
 </head>
 
@@ -315,12 +337,20 @@
       const {error:delErr}=await supabase.from('memos').delete().eq('id',id);
       if(delErr)throw delErr;
     }
+
+    /* 🔁 교체된 업로드 함수 */
     async function uploadImageToStorage(file){
-      const fileName=`${crypto.randomUUID()}_${file.name}`;
-      const {data,error}=await supabase.storage.from('uploads').upload(fileName,file,{upsert:false});
-      if(error)throw error;
-      const {data:{publicUrl}}=supabase.storage.from('uploads').getPublicUrl(data.path);
-      return {path:data.path,url:publicUrl};
+      const key = toSafeKey(file); // ASCII-only + public/ 접두어
+      const {data, error} = await supabase
+        .storage.from('uploads')
+        .upload(key, file, { upsert: false });
+
+      if(error){ console.error('[upload error]', error); throw error; }
+
+      const { data: { publicUrl } } =
+        supabase.storage.from('uploads').getPublicUrl(data.path);
+
+      return { path: data.path, url: publicUrl };
     }
 
     /* ===== 초기화 ===== */
@@ -506,86 +536,4 @@
     function openMemoModal(){document.getElementById('memoModal').classList.remove('hidden');document.getElementById('memoModal').classList.add('flex');}
     function closeMemoModal(){document.getElementById('memoModal').classList.add('hidden');document.getElementById('memoModal').classList.remove('flex');document.getElementById('memoForm').reset();}
     async function addMemo(e){e.preventDefault();const department=document.getElementById('memoDepartment').value;const content=document.getElementById('memoContent').value;const password=document.getElementById('memoPassword').value;try{await insertMemoDB({department,content,password});await refreshMemos();closeMemoModal();updateLastModified();}catch(err){alert(err.message||'메모 추가 중 오류');}}
-    function updateMemoList(){const list=document.getElementById('memoList');list.innerHTML=memos.map((m,i)=>`<div class="memo-item bg-white bg-opacity-50 p-3 rounded-lg cursor-pointer hover:bg-opacity-70" onclick="openMemoDetail(${i}); return false;"><div class="font-medium text-green-800 truncate">${m.content.substring(0,30)}${m.content.length>30?'...':''}</div><div class="text-xs text-green-600">${m.date}</div></div>`).join('');}
-    function openMemoDetail(i){currentMemoIndex=i;const m=memos[i];document.getElementById('memoDetailContent').innerHTML=`<div class="whitespace-pre-wrap">${m.content}</div><div class="text-xs text-green-600 mt-2">작성일: ${m.date}</div>`;document.getElementById('memoDetailModal').classList.remove('hidden');document.getElementById('memoDetailModal').classList.add('flex');}
-    function closeMemoDetailModal(){document.getElementById('memoDetailModal').classList.add('hidden');document.getElementById('memoDetailModal').classList.remove('flex');currentMemoIndex=null;}
-    function openPasswordModal(){document.getElementById('passwordModal').classList.remove('hidden');document.getElementById('passwordModal').classList.add('flex');}
-    function closePasswordModal(){document.getElementById('passwordModal').classList.add('hidden');document.getElementById('passwordModal').classList.remove('flex');document.getElementById('passwordForm').reset();}
-    async function deleteMemo(e){e.preventDefault();const inputPw=document.getElementById('deletePassword').value;const memo=memos[currentMemoIndex];if(!memo){alert('메모를 찾을 수 없습니다.');return;}try{await deleteMemoDB(memo.id,inputPw);closeMemoDetailModal();closePasswordModal();await refreshMemos();updateLastModified();}catch(err){alert(err.message||'비밀번호가 일치하지 않습니다.');}}
-
-    /* ===== 제출 임박 ===== */
-    function updateUrgentTasks(){
-      const box=document.getElementById('urgentTasks');const today=new Date();today.setHours(0,0,0,0);const list=[];
-      Object.keys(events).forEach(k=>{
-        const [y,m,d]=k.split('-').map(Number);
-        const dt=new Date(y,m,d);dt.setHours(0,0,0,0);
-        const diff=Math.ceil((dt-today)/(1000*60*60*24));
-        (events[k]||[]).forEach(ev=>{
-          if(ev.urgentAlert && diff<=3 && diff>=0){
-            list.push({...ev,daysLeft:diff,dateKey:k});
-          }
-        });
-      });
-      list.sort((a,b)=>a.daysLeft-b.daysLeft);
-      box.innerHTML = list.length===0 ? '<div class="text-green-600 text-center py-4">현재 제출 임박 항목이 없습니다.</div>' :
-        list.map(t=>{
-          let c='bg-yellow-100 border-yellow-500',tc='text-yellow-800',dc='text-yellow-600';
-          if(t.daysLeft===0){c='bg-red-100 border-red-500';tc='text-red-800';dc='text-red-600';}
-          else if(t.daysLeft===1){c='bg-orange-100 border-orange-500';tc='text-orange-800';dc='text-orange-600';}
-          return `<div class="${c} border-l-4 p-3 rounded cursor-pointer hover:bg-opacity-80" onclick="openEventDetail('${t.dateKey}','${t.id}'); return false;">
-                    <p class="${tc} font-medium">${t.title}</p>
-                    <p class="${dc} text-sm">마감: ${t.daysLeft===0?'오늘':t.daysLeft+'일 후'}</p>
-                    ${t.time?`<p class="${dc} text-xs">시간: ${t.time}</p>`:''}
-                    ${t.location?`<p class="${dc} text-xs">장소: ${t.location}</p>`:''}
-                  </div>`;
-        }).join('');
-    }
-
-    /* ===== 이미지 업로드 ===== */
-    async function handleImageUpload(e){
-      const file=e.target.files[0];const uploaded=document.getElementById('uploadedImages');const btn=document.getElementById('uploadButton');
-      if(file&&file.type.startsWith('image/')){
-        try{
-          const {url}=await uploadImageToStorage(file);
-          uploaded.innerHTML=''; btn.classList.add('hidden'); uploaded.classList.remove('hidden');
-          const div=document.createElement('div'); div.className='relative group cursor-pointer w-full';
-          div.innerHTML=`
-            <img src="${url}" class="w-full h-auto rounded-lg shadow-md">
-            <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-              <button onclick="editImage(this); return false;" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">수정</button>
-              <button onclick="deleteImage(this); return false;" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm">삭제</button>
-            </div>`;
-          uploaded.appendChild(div);
-          updateLastModified();
-        }catch(err){alert('업로드 실패: '+(err.message||''));}
-      }
-      e.target.value='';
-    }
-    function editImage(button){
-      const input=document.createElement('input');
-      input.type='file'; input.accept='image/*';
-      input.onchange=async e=>{
-        const f=e.target.files[0];
-        if(!(f&&f.type.startsWith('image/')))return;
-        try{
-          const {url}=await uploadImageToStorage(f);
-          const group=button.closest('.group'); group.querySelector('img').src=url;
-          updateLastModified();
-        }catch(err){alert('업로드 실패');}
-      };
-      input.click();
-    }
-    function deleteImage(){
-      const uploaded=document.getElementById('uploadedImages');const btn=document.getElementById('uploadButton');
-      uploaded.innerHTML=''; uploaded.classList.add('hidden'); btn.classList.remove('hidden'); updateLastModified();
-    }
-    function updateLastModified(){document.getElementById('lastModified').textContent=new Date().toLocaleString('ko-KR');}
-
-    /* ===== inline onclick에서 찾을 수 있도록 전역 노출 ===== */
-    window.openEventDetail = openEventDetail;
-    window.openMemoDetail = openMemoDetail;
-    window.editImage = editImage;
-    window.deleteImage = deleteImage;
-  </script>
-</body>
-</html>
+    function updateMemoList(){const list=document.getElementById('memoList');list.innerHTML=memos.map((m,i)=>`<div class="memo-item bg-white bg-opacity-50 p-3 rounded-lg cursor-pointer hover:bg-opacity-70" onclick="openMemoDetail(${i}); return false;"><div class="font-medium text-green-800 truncate">${m.content.substring(0,30)}${m.content.length>30?'...':''}</div><div class="text-xs text-green-600">${m
