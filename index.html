@@ -26,57 +26,7 @@
   </style>
 
   <script>
-
-    // 업로드 버킷에서 최신 이미지를 한 장 찾아와 화면에 표시
-async function loadLatestImage() {
-  const uploaded = document.getElementById('uploadedImages');
-  const btn = document.getElementById('uploadButton');
-
-  // 탐색할 경로 후보들 (루트, public, images, public/images)
-  const candidates = ['', 'public', 'images', 'public/images'];
-  let newest = null;
-
-  for (const path of candidates) {
-    const { data, error } = await supabase.storage
-      .from('uploads')
-      .list(path, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
-
-    if (error || !data || data.length === 0) continue;
-
-    const candidate = data[0];
-    const fullPath = path ? `${path}/${candidate.name}` : candidate.name;
-
-    // created_at이 없는 경우도 있어 대비: 이름 정렬 결과를 그대로 사용
-    newest = newest ?? { fullPath, created_at: candidate.created_at || '' };
-    // 첫 후보가 이미 최신(내림차순)이라 더 비교할 필요 없음
-    if (candidate) {
-      newest = { fullPath, created_at: candidate.created_at || '' };
-      break;
-    }
-  }
-
-  if (!newest) return; // 보여줄 파일 없음
-
-  const { data: pub } = supabase.storage.from('uploads').getPublicUrl(newest.fullPath);
-  if (!pub || !pub.publicUrl) return;
-
-  uploaded.innerHTML = '';
-  btn.classList.add('hidden');
-  uploaded.classList.remove('hidden');
-
-  const div = document.createElement('div');
-  div.className = 'relative group cursor-pointer w-full';
-  div.innerHTML = `
-    <img src="${pub.publicUrl}" class="w-full h-auto rounded-lg shadow-md">
-    <div class="absolute inset-0 bg-black bg-opacity-50 rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-      <button onclick="editImage(this); return false;" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">수정</button>
-      <button onclick="deleteImage(this); return false;" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm">삭제</button>
-    </div>`;
-  uploaded.appendChild(div);
-}
-
-
-    
+     
     // 안전한 UUID
 function safeUUID(){
   return (crypto.randomUUID?.() || ('f_' + Date.now().toString(36)));
