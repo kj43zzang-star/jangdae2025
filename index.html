@@ -359,6 +359,10 @@ function toSafeKey(file){
   const { data: { publicUrl } } =
     supabase.storage.from('uploads').getPublicUrl(data.path);
 
+onst test = await fetch(publicUrl, { method: 'HEAD', cache: 'no-store' });
+console.log('[PUBLIC URL]', data.path, publicUrl, 'status=', test.status);
+alert('이미지 접근 상태코드: ' + test.status);  // 200이 정상이에요.
+      
   return { path: data.path, url: publicUrl };
 }
 
